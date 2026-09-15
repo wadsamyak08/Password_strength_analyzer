@@ -8,9 +8,7 @@ import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
 
-# ══════════════════════════════════════════════════════════════
-#  DATA
-# ══════════════════════════════════════════════════════════════
+
 
 COMMON_PASSWORDS = {
     "123456", "password", "123456789", "12345678", "12345", "1234567",
@@ -42,9 +40,7 @@ WORDS = (
 
 SYMBOL_POOL = "!@#$%^&*()-_=+[]{}?"
 
-# ══════════════════════════════════════════════════════════════
-#  CORE: ANALYZER + GENERATORS
-# ══════════════════════════════════════════════════════════════
+
 
 class PasswordAnalyzer:
     WEAK_WORDS = ("password", "passwd", "admin", "user", "login", "welcome", "letmein")
@@ -96,7 +92,6 @@ class PasswordAnalyzer:
                 "score": score, "is_common": is_common, "has_sequence": has_seq,
                 "has_repeat": has_repeat}
 
-    # ── pattern detectors ────────────────────────────────────
     @staticmethod
     def _ordered_sequence(s):
         for i in range(len(s) - 2):
@@ -114,7 +109,7 @@ class PasswordAnalyzer:
                     return True
         return False
 
-    # ── dynamic suggestions ──────────────────────────────────
+
     def suggestions(self, rep: dict) -> list:
         tips = []
         if rep["length"] < 12:
@@ -131,10 +126,10 @@ class PasswordAnalyzer:
 
 def generate_password(length: int = 16) -> str:
     pools = [string.ascii_lowercase, string.ascii_uppercase, string.digits, SYMBOL_POOL]
-    chars = [secrets.choice(p) for p in pools]                      # guarantee all classes
+    chars = [secrets.choice(p) for p in pools]                      
     chars += [secrets.choice("".join(pools)) for _ in range(length - 4)]
     out = []
-    while chars:                                                    # cryptographically safe shuffle
+    while chars:                                                    
         out.append(chars.pop(secrets.randbelow(len(chars))))
     return "".join(out)
 
@@ -151,7 +146,7 @@ YEAR = 31_556_952
 def crack_time_text(entropy_bits: float) -> str:
     if entropy_bits <= 0:
         return "instantly"
-    seconds = (2.0 ** min(entropy_bits, 119)) / 1e10        # 10 billion guesses/sec
+    seconds = (2.0 ** min(entropy_bits, 119)) / 1e10       
     if entropy_bits >= 120 or seconds >= YEAR * 1e12:
         return "trillions of years 🔒"
     steps = [(YEAR * 1e9, "billion years"), (YEAR * 1e6, "million years"),
@@ -174,9 +169,7 @@ def verdict_of(score: int):
     if score >= 30: return "WEAK",        "#ff9f43"
     return "VERY WEAK", "#ff5c5c"
 
-# ══════════════════════════════════════════════════════════════
-#  DATABASE: REUSE PREVENTION (stores hashes only)
-# ══════════════════════════════════════════════════════════════
+
 
 class PasswordVault:
     """Remembers SHA-256 hashes so old passwords can't be reused.
@@ -217,9 +210,7 @@ class PasswordVault:
             (username.strip().lower(),)).fetchone()
         return row[0] or 0, row[1]
 
-# ══════════════════════════════════════════════════════════════
-#  UI
-# ══════════════════════════════════════════════════════════════
+
 
 BG, CARD, FIELD = "#0f1220", "#191d33", "#232848"
 TEXT, MUTED, DIM = "#eceef8", "#8b91b5", "#262b4a"
@@ -267,7 +258,7 @@ class App(tk.Tk):
         self._build()
         self._refresh()
 
-    # ── layout ───────────────────────────────────────────────
+   
     def _center(self, w, h):
         x = (self.winfo_screenwidth() - w) // 2
         y = (self.winfo_screenheight() - h) // 2
@@ -287,7 +278,7 @@ class App(tk.Tk):
         tk.Label(self, text="Length · complexity · uniqueness — with stronger alternatives",
                  font=(FONT, 10), bg=BG, fg=MUTED).pack(pady=(0, 14))
 
-        # ── input + meter card ───────────────────────────────
+       
         card = tk.Frame(self, bg=CARD)
         card.pack(padx=28, fill="x")
         inner = tk.Frame(card, bg=CARD)
@@ -327,7 +318,7 @@ class App(tk.Tk):
         self.entropy_val = self._stat(stats, "ENTROPY", 0)
         self.crack_val = self._stat(stats, "TIME TO CRACK (offline, 10¹⁰ guesses/s)", 1)
 
-        # ── requirements card ────────────────────────────────
+       
         chk_card = tk.Frame(self, bg=CARD)
         chk_card.pack(padx=28, pady=(14, 0), fill="x")
         chk = tk.Frame(chk_card, bg=CARD)
@@ -340,7 +331,7 @@ class App(tk.Tk):
             lbl.grid(row=i // 2 + 1, column=i % 2, sticky="w", padx=(0, 30), pady=2)
             self.check_lbls.append(lbl)
 
-        # ── suggestions card ─────────────────────────────────
+        
         sug_card = tk.Frame(self, bg=CARD)
         sug_card.pack(padx=28, pady=(14, 0), fill="x")
         sug = tk.Frame(sug_card, bg=CARD)
@@ -354,7 +345,7 @@ class App(tk.Tk):
         self.sug_box.pack(fill="x")
         self.sug_box.config(state="disabled")
 
-        # ── action buttons ───────────────────────────────────
+        
         bar = tk.Frame(self, bg=BG)
         bar.pack(pady=16)
         for text, cmd, bg, fg in [
@@ -381,7 +372,7 @@ class App(tk.Tk):
         val.pack(anchor="w")
         return val
 
-    # ── live analysis ────────────────────────────────────────
+    
     def _refresh(self, *_):
         pw = self.password_var.get()
         user = self.username_var.get().strip()
@@ -423,7 +414,7 @@ class App(tk.Tk):
                 box.insert("end", tip + "\n", "warn" if tip.startswith(("REUSED", "Never")) else ())
         box.config(state="disabled")
 
-    # ── animated strength meter ──────────────────────────────
+  
     def _animate(self, target):
         self._target = target
         if self._anim_job is None:
