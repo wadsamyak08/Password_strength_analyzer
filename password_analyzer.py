@@ -1,16 +1,3 @@
-"""
-🔐 Password Strength Analyzer
-════════════════════════════════════════════════════════════════
-Features
-  • Live analysis of length, complexity & entropy
-  • Common-password, keyboard-pattern & sequence detection
-  • "Time to crack" estimate
-  • Dynamic suggestions + secure password/passphrase generator
-  • SQLite vault (SHA-256 hashes) that blocks password reuse
-
-Run:  python password_analyzer.py
-"""
-
 import hashlib
 import math
 import re
